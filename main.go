@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"io"
@@ -63,11 +64,12 @@ func initializeLogger() (*log.Logger, error) {
 	logFile := os.Getenv("LINKO_LOG_FILE")
 	if logFile != "" {
 		accessLog, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		bufferedLog := bufio.NewWriterSize(accessLog, 8192)
 		if err != nil {
 			return nil, err
 		}
 
-		logTargets = append(logTargets, accessLog)
+		logTargets = append(logTargets, bufferedLog)
 	}
 
 	return log.New(io.MultiWriter(logTargets...), "", log.LstdFlags), nil
