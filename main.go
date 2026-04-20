@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -27,11 +28,16 @@ func main() {
 }
 
 func run(ctx context.Context, cancel context.CancelFunc, httpPort int, dataDir string) int {
-	logger, err := initializeLogger()
+	logger, closeLogger, err := initializeLogger()
 	if err != nil {
-		log.Printf("failed to initialize logger: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v", err)
 		return 1
 	}
+	defer func() {
+		if err := closeLogger(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to close logger: %v", err)
+		}
+	}()
 
 	st, err := store.New(dataDir, logger)
 	if err != nil {
@@ -59,18 +65,34 @@ func run(ctx context.Context, cancel context.CancelFunc, httpPort int, dataDir s
 	return 0
 }
 
-func initializeLogger() (*log.Logger, error) {
-	logTargets := []io.Writer{os.Stderr}
+type closeFunc func() error
+
+func initializeLogger() (*log.Logger, closeFunc, error) {
 	logFile := os.Getenv("LINKO_LOG_FILE")
 	if logFile != "" {
 		accessLog, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 		bufferedLog := bufio.NewWriterSize(accessLog, 8192)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		logTargets = append(logTargets, bufferedLog)
+		multiWriter := io.MultiWriter(os.Stderr, bufferedLog)
+		closeFunc := func() error {
+			if err := bufferedLog.Flush(); err != nil {
+				return fmt.Errorf("failed to flush log file: %w", err)
+			}
+			if err := accessLog.Close(); err != nil {
+				return fmt.Errorf("failed to close log file: %w", err)
+			}
+			return nil
+		}
+
+		return log.New(multiWriter, "", log.LstdFlags), closeFunc, nil
 	}
 
-	return log.New(io.MultiWriter(logTargets...), "", log.LstdFlags), nil
+	closeFunc := func() error {
+		return nil
+	}
+
+	return log.New(os.Stderr, "", log.LstdFlags), closeFunc, nil
 }
