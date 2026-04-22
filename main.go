@@ -75,12 +75,8 @@ func initializeLogger() (*slog.Logger, closeFunc, error) {
 			return nil, nil, err
 		}
 
-		debugHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		})
-		infoHandler := slog.NewTextHandler(bufferedLog, &slog.HandlerOptions{
-			Level: slog.LevelInfo,
-		})
+		debugHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})
+		infoHandler := slog.NewJSONHandler(bufferedLog, &slog.HandlerOptions{Level: slog.LevelInfo})
 		closeFunc := func() error {
 			if err := bufferedLog.Flush(); err != nil {
 				return fmt.Errorf("failed to flush log file: %w", err)
