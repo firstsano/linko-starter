@@ -46,7 +46,10 @@ func (s *server) handlerShortenLink(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing url parameter", http.StatusBadRequest)
 		return
 	}
-	s.logger.Info("Shortening URL:", longURL)
+	s.logger.Info(
+		"Shortening URL",
+		slog.String("longURL", longURL),
+	)
 	u, err := url.Parse(longURL)
 	if err != nil || u.Scheme == "" || u.Host == "" {
 		http.Error(w, "invalid URL: must include scheme (http/https) and host", http.StatusBadRequest)
