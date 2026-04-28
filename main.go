@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"boot.dev/linko/internal/store"
+	pkgerr "github.com/pkg/errors"
 )
 
 func main() {
@@ -65,6 +67,10 @@ func run(ctx context.Context, cancel context.CancelFunc, httpPort int, dataDir s
 }
 
 type closeFunc func() error
+type stackTracer interface {
+	error
+	StackTrace() pkgerr.StackTrace
+}
 
 func initializeLogger() (*slog.Logger, closeFunc, error) {
 	logFile := os.Getenv("LINKO_LOG_FILE")
@@ -75,8 +81,14 @@ func initializeLogger() (*slog.Logger, closeFunc, error) {
 			return nil, nil, err
 		}
 
-		debugHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug, ReplaceAttr: errorWithStacktrace})
-		infoHandler := slog.NewJSONHandler(bufferedLog, &slog.HandlerOptions{Level: slog.LevelInfo, ReplaceAttr: errorWithStacktrace})
+		debugHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+			Level:       slog.LevelDebug,
+			ReplaceAttr: errorWithStacktrace,
+		})
+		infoHandler := slog.NewJSONHandler(bufferedLog, &slog.HandlerOptions{
+			Level:       slog.LevelInfo,
+			ReplaceAttr: errorWithStacktrace,
+		})
 		closeFunc := func() error {
 			if err := bufferedLog.Flush(); err != nil {
 				return fmt.Errorf("failed to flush log file: %w", err)
@@ -111,5 +123,19 @@ func errorWithStacktrace(_ []string, a slog.Attr) slog.Attr {
 		return a
 	}
 
-	return slog.String("error", fmt.Sprintf("%+v", err))
+	stackErr, ok := errors.AsType[stackTracer](err)
+	if !ok {
+		return a
+	}
+
+	return slog.GroupAttrs("error",
+		slog.Attr{
+			Key:   "message",
+			Value: slog.StringValue(stackErr.Error()),
+		},
+		slog.Attr{
+			Key:   "stack_trace",
+			Value: slog.StringValue(fmt.Sprintf("%+v", stackErr.StackTrace())),
+		},
+	)
 }
