@@ -75,8 +75,8 @@ func initializeLogger() (*slog.Logger, closeFunc, error) {
 			return nil, nil, err
 		}
 
-		debugHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})
-		infoHandler := slog.NewJSONHandler(bufferedLog, &slog.HandlerOptions{Level: slog.LevelInfo})
+		debugHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug, ReplaceAttr: errorWithStacktrace})
+		infoHandler := slog.NewJSONHandler(bufferedLog, &slog.HandlerOptions{Level: slog.LevelInfo, ReplaceAttr: errorWithStacktrace})
 		closeFunc := func() error {
 			if err := bufferedLog.Flush(); err != nil {
 				return fmt.Errorf("failed to flush log file: %w", err)
@@ -99,4 +99,17 @@ func initializeLogger() (*slog.Logger, closeFunc, error) {
 	})
 
 	return slog.New(slogHandler), closeFunc, nil
+}
+
+func errorWithStacktrace(_ []string, a slog.Attr) slog.Attr {
+	if a.Key != "error" {
+		return a
+	}
+
+	err, ok := a.Value.Any().(error)
+	if !ok {
+		return a
+	}
+
+	return slog.String("error", fmt.Sprintf("%+v", err))
 }
