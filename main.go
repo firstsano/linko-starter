@@ -72,6 +72,10 @@ type stackTracer interface {
 	error
 	StackTrace() pkgerr.StackTrace
 }
+type multiError interface {
+	error
+	Unwrap() []error
+}
 
 func initializeLogger() (*slog.Logger, closeFunc, error) {
 	logFile := os.Getenv("LINKO_LOG_FILE")
@@ -84,11 +88,11 @@ func initializeLogger() (*slog.Logger, closeFunc, error) {
 
 		debugHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 			Level:       slog.LevelDebug,
-			ReplaceAttr: errorWithStacktrace,
+			ReplaceAttr: replaceAttr,
 		})
 		infoHandler := slog.NewJSONHandler(bufferedLog, &slog.HandlerOptions{
 			Level:       slog.LevelInfo,
-			ReplaceAttr: errorWithStacktrace,
+			ReplaceAttr: replaceAttr,
 		})
 		closeFunc := func() error {
 			if err := bufferedLog.Flush(); err != nil {
@@ -114,7 +118,7 @@ func initializeLogger() (*slog.Logger, closeFunc, error) {
 	return slog.New(slogHandler), closeFunc, nil
 }
 
-func errorWithStacktrace(_ []string, a slog.Attr) slog.Attr {
+func replaceAttr(_ []string, a slog.Attr) slog.Attr {
 	if a.Key != "error" {
 		return a
 	}
@@ -124,12 +128,21 @@ func errorWithStacktrace(_ []string, a slog.Attr) slog.Attr {
 		return a
 	}
 
-	errorAttrs := []slog.Attr{
-		{
-			Key:   "message",
-			Value: slog.StringValue(err.Error()),
-		},
+	if multiErr, ok := errors.AsType[multiError](err); ok {
+		var groupAttrs []slog.Attr
+		for i, err := range multiErr.Unwrap() {
+			key := fmt.Sprintf("error_%d", i+1)
+			errAttrs := slog.GroupAttrs(key, errorAttrs(err)...)
+			groupAttrs = append(groupAttrs, errAttrs)
+		}
+		return slog.GroupAttrs("errors", groupAttrs...)
 	}
+
+	return slog.GroupAttrs("error", errorAttrs(err)...)
+}
+
+func errorAttrs(err error) []slog.Attr {
+	errorAttrs := []slog.Attr{slog.String("message", err.Error())}
 	errorAttrs = append(errorAttrs, linkoerr.Attrs(err)...)
 	if stackErr, ok := errors.AsType[stackTracer](err); ok {
 		errorAttrs = append(errorAttrs, slog.Attr{
@@ -138,5 +151,5 @@ func errorWithStacktrace(_ []string, a slog.Attr) slog.Attr {
 		})
 	}
 
-	return slog.GroupAttrs("error", errorAttrs...)
+	return errorAttrs
 }
