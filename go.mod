@@ -1,4 +1,4 @@
-module boot.dev/linko
+module github.com/firstsano/linko
 
 go 1.26
 

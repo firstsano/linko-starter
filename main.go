@@ -12,8 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"boot.dev/linko/internal/linkoerr"
-	"boot.dev/linko/internal/store"
+	"github.com/firstsano/linko/internal/build"
+	"github.com/firstsano/linko/internal/linkoerr"
+	"github.com/firstsano/linko/internal/store"
 	pkgerr "github.com/pkg/errors"
 )
 
@@ -31,6 +32,10 @@ func main() {
 
 func run(ctx context.Context, cancel context.CancelFunc, httpPort int, dataDir string) int {
 	logger, closeLogger, err := initializeLogger()
+	logger = logger.With(
+		slog.String("git_sha", build.GitSHA),
+		slog.String("build_time", build.BuildTime),
+	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v", err)
 		return 1
