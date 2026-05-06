@@ -10,4 +10,5 @@ It's intentionally small, a little messy, and realistic enough to practice addin
 go build \
   -ldflags "-X github.com/firstsano/linko/internal/build.GitSHA=$(git rev-parse HEAD) -X github.com/firstsano/linko/internal/build.BuildTime=$(date -u '+%Y-%m-%dT%H:%M:%SZ')" \
   -o linko
+LINKO_LOG_FILE=linko.access.log ENV=development ./linko
 ```
