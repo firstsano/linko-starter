@@ -15,6 +15,8 @@ import (
 	"github.com/firstsano/linko/internal/build"
 	"github.com/firstsano/linko/internal/linkoerr"
 	"github.com/firstsano/linko/internal/store"
+	"github.com/lmittmann/tint"
+	"github.com/mattn/go-isatty"
 	pkgerr "github.com/pkg/errors"
 )
 
@@ -96,9 +98,10 @@ func initializeLogger() (*slog.Logger, closeFunc, error) {
 			return nil, nil, err
 		}
 
-		debugHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		debugHandler := tint.NewHandler(os.Stderr, &tint.Options{
 			Level:       slog.LevelDebug,
 			ReplaceAttr: replaceAttr,
+			NoColor:     !(isatty.IsTerminal(os.Stderr.Fd()) || isatty.IsCygwinTerminal(os.Stderr.Fd())),
 		})
 		infoHandler := slog.NewJSONHandler(bufferedLog, &slog.HandlerOptions{
 			Level:       slog.LevelInfo,
