@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"flag"
@@ -17,6 +16,7 @@ import (
 	"github.com/firstsano/linko/internal/store"
 	"github.com/lmittmann/tint"
 	"github.com/mattn/go-isatty"
+	"github.com/natefinch/lumberjack"
 	pkgerr "github.com/pkg/errors"
 )
 
@@ -92,26 +92,25 @@ type multiError interface {
 func initializeLogger() (*slog.Logger, closeFunc, error) {
 	logFile := os.Getenv("LINKO_LOG_FILE")
 	if logFile != "" {
-		accessLog, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-		bufferedLog := bufio.NewWriterSize(accessLog, 8192)
-		if err != nil {
-			return nil, nil, err
+		logger := &lumberjack.Logger{
+			Filename:   logFile,
+			MaxSize:    1,
+			MaxAge:     28,
+			MaxBackups: 10,
+			LocalTime:  false,
+			Compress:   true,
 		}
-
 		debugHandler := tint.NewHandler(os.Stderr, &tint.Options{
 			Level:       slog.LevelDebug,
 			ReplaceAttr: replaceAttr,
 			NoColor:     !(isatty.IsTerminal(os.Stderr.Fd()) || isatty.IsCygwinTerminal(os.Stderr.Fd())),
 		})
-		infoHandler := slog.NewJSONHandler(bufferedLog, &slog.HandlerOptions{
+		infoHandler := slog.NewJSONHandler(logger, &slog.HandlerOptions{
 			Level:       slog.LevelInfo,
 			ReplaceAttr: replaceAttr,
 		})
 		closeFunc := func() error {
-			if err := bufferedLog.Flush(); err != nil {
-				return fmt.Errorf("failed to flush log file: %w", err)
-			}
-			if err := accessLog.Close(); err != nil {
+			if err := logger.Close(); err != nil {
 				return fmt.Errorf("failed to close log file: %w", err)
 			}
 			return nil
