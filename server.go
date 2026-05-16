@@ -64,7 +64,12 @@ func httpError(ctx context.Context, w http.ResponseWriter, err error, status int
 	if logCtx, ok := ctx.Value(logContextKey).(*LogContext); ok {
 		logCtx.Error = err
 	}
-	http.Error(w, err.Error(), status)
+	msg := err.Error()
+	switch status {
+	case http.StatusUnauthorized, http.StatusForbidden, http.StatusInternalServerError:
+		msg = http.StatusText(status)
+	}
+	http.Error(w, msg, status)
 }
 
 func requestLogger(logger *slog.Logger) func(http.Handler) http.Handler {
