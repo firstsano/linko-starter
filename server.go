@@ -10,9 +10,12 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/firstsano/linko/internal/store"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -138,12 +141,37 @@ func requestIdentifier(next http.Handler) http.Handler {
 	})
 }
 
+// httpRequestsTotal counts requests by method, path and status.
+var httpRequestsTotal = promauto.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "http_requests_total",
+		Help: "Total number of HTTP requests.",
+	},
+	[]string{"method", "path", "status"},
+)
+
+func metricsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		spy := &spyResponseWriter{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+
+		next.ServeHTTP(spy, r)
+
+		path := r.URL.Path
+		method := r.Method
+		status := strconv.Itoa(spy.statusCode)
+		httpRequestsTotal.WithLabelValues(method, path, status).Inc()
+	})
+}
+
 func newServer(store store.Store, port int, cancel context.CancelFunc, logger *slog.Logger) *server {
 	mux := http.NewServeMux()
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
-		Handler: requestIdentifier(requestLogger(logger)(mux)),
+		Handler: metricsMiddleware(requestIdentifier(requestLogger(logger)(mux))),
 	}
 
 	s := &server{
