@@ -13,6 +13,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/firstsano/linko/internal/build"
 	"github.com/firstsano/linko/internal/linkoerr"
 	"github.com/firstsano/linko/internal/store"
