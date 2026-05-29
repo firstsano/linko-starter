@@ -1,0 +1,56 @@
+File: linko
+Type: inuse_space
+Time: 2026-05-29 12:29:21 +05
+Duration: 30s, Total samples = 3474.70kB 
+Showing nodes accounting for 645.46kB, 18.58% of 3474.70kB total
+      flat  flat%   sum%        cum   cum%
+ -902.59kB 25.98% 25.98%  -902.59kB 25.98%  compress/flate.NewWriter (inline)
+  522.70kB 15.04% 10.93%   522.70kB 15.04%  internal/bytealg.MakeNoZero
+  512.88kB 14.76%  3.83%   512.88kB 14.76%  sync.(*Pool).pinSlow
+  512.50kB 14.75% 18.58%   512.50kB 14.75%  log/slog/internal/buffer.init.func1
+ -512.03kB 14.74%  3.84%  -512.03kB 14.74%  internal/profile.init.func4
+  512.01kB 14.74% 18.58%   512.01kB 14.74%  runtime.mallocgc
+         0     0% 18.58%  -902.59kB 25.98%  compress/gzip.(*Writer).Write
+         0     0% 18.58%  -512.03kB 14.74%  internal/profile.Parse
+         0     0% 18.58%  -512.03kB 14.74%  internal/profile.decodeMessage
+         0     0% 18.58%  -512.03kB 14.74%  internal/profile.parseUncompressed
+         0     0% 18.58%  -512.03kB 14.74%  internal/profile.unmarshal (inline)
+         0     0% 18.58%   512.50kB 14.75%  log/slog.(*Logger).Info
+         0     0% 18.58%   512.50kB 14.75%  log/slog.(*Logger).log
+         0     0% 18.58%   512.50kB 14.75%  log/slog.(*TextHandler).Handle
+         0     0% 18.58%   512.50kB 14.75%  log/slog.(*commonHandler).handle
+         0     0% 18.58%   512.50kB 14.75%  log/slog.(*commonHandler).newHandleState
+         0     0% 18.58%   512.50kB 14.75%  log/slog/internal/buffer.New (inline)
+         0     0% 18.58%   522.70kB 15.04%  main.(*server).handlerRedirect
+         0     0% 18.58% -1414.62kB 40.71%  main.newServer.(*server).authMiddleware.func9
+         0     0% 18.58%  -379.42kB 10.92%  main.newServer.metricsMiddleware.func4
+         0     0% 18.58%  -379.42kB 10.92%  main.newServer.newServer.requestLogger.func1.func2
+         0     0% 18.58%  -379.42kB 10.92%  main.newServer.requestIdentifier.func3
+         0     0% 18.58%  -891.92kB 25.67%  net/http.(*ServeMux).ServeHTTP
+         0     0% 18.58%   133.46kB  3.84%  net/http.(*conn).serve
+         0     0% 18.58%   512.88kB 14.76%  net/http.(*response).finishRequest
+         0     0% 18.58%  -379.42kB 10.92%  net/http.HandlerFunc.ServeHTTP
+         0     0% 18.58%   512.88kB 14.76%  net/http.putBufioWriter
+         0     0% 18.58%  -379.42kB 10.92%  net/http.serverHandler.ServeHTTP
+         0     0% 18.58% -1414.62kB 40.71%  net/http/pprof.Index
+         0     0% 18.58% -1414.62kB 40.71%  net/http/pprof.collectProfile
+         0     0% 18.58% -1414.62kB 40.71%  net/http/pprof.handler.ServeHTTP
+         0     0% 18.58% -1414.62kB 40.71%  net/http/pprof.handler.serveDeltaProfile
+         0     0% 18.58%   512.01kB 14.74%  runtime.(*scavengerState).sleep
+         0     0% 18.58%   512.01kB 14.74%  runtime.(*timer).maybeAdd
+         0     0% 18.58%   512.01kB 14.74%  runtime.(*timer).modify
+         0     0% 18.58%   512.01kB 14.74%  runtime.(*timer).reset (inline)
+         0     0% 18.58%   512.01kB 14.74%  runtime.(*timers).addHeap
+         0     0% 18.58%   512.01kB 14.74%  runtime.bgscavenge
+         0     0% 18.58%   512.01kB 14.74%  runtime.growslice
+         0     0% 18.58%  -902.59kB 25.98%  runtime/pprof.(*Profile).WriteTo
+         0     0% 18.58%  -902.59kB 25.98%  runtime/pprof.(*profileBuilder).build
+         0     0% 18.58%  -902.59kB 25.98%  runtime/pprof.writeHeap
+         0     0% 18.58%  -902.59kB 25.98%  runtime/pprof.writeHeapInternal
+         0     0% 18.58%  -902.59kB 25.98%  runtime/pprof.writeHeapProto
+         0     0% 18.58%   522.70kB 15.04%  strings.(*Builder).Grow
+         0     0% 18.58%   522.70kB 15.04%  strings.(*Builder).grow
+         0     0% 18.58%   522.70kB 15.04%  strings.Repeat
+         0     0% 18.58%   512.50kB 14.75%  sync.(*Pool).Get
+         0     0% 18.58%   512.88kB 14.76%  sync.(*Pool).Put
+         0     0% 18.58%   512.88kB 14.76%  sync.(*Pool).pin
