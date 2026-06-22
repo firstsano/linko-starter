@@ -25,5 +25,7 @@ func initTracing(ctx context.Context) (func(context.Context) error, error) {
 	)
 
 	otel.SetTracerProvider(tp)
+	tracer = tp.Tracer("boot.dev/linko")
+
 	return tp.Shutdown, nil
 }

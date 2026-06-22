@@ -22,7 +22,10 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/natefinch/lumberjack"
 	pkgerr "github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace"
 )
+
+var tracer trace.Tracer
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
