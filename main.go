@@ -40,6 +40,12 @@ func run(ctx context.Context, cancel context.CancelFunc, httpPort int, dataDir s
 	env := os.Getenv("ENV")
 	hostname, _ := os.Hostname()
 
+	closeTracing, err := initTracing(context.Background())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize tracing: %v", err)
+		return 1
+	}
+
 	logger, closeLogger, err := initializeLogger()
 	logger = logger.With(
 		slog.String("git_sha", build.GitSHA),
@@ -51,9 +57,13 @@ func run(ctx context.Context, cancel context.CancelFunc, httpPort int, dataDir s
 		fmt.Fprintf(os.Stderr, "failed to initialize logger: %v", err)
 		return 1
 	}
+
 	defer func() {
 		if err := closeLogger(); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to close logger: %v", err)
+		}
+		if err := closeTracing(context.Background()); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to close tracing: %v", err)
 		}
 	}()
 
