@@ -8,10 +8,22 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.41.0"
 )
 
 func initTracing(ctx context.Context) (func(context.Context) error, error) {
 	exp, err := otlptracegrpc.New(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName("boot.dev/linko"),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +33,7 @@ func initTracing(ctx context.Context) (func(context.Context) error, error) {
 			exp,
 			sdktrace.WithBatchTimeout(2*time.Second),
 		),
-		sdktrace.WithResource(resource.Default()),
+		sdktrace.WithResource(res),
 	)
 
 	otel.SetTracerProvider(tp)
