@@ -31,7 +31,7 @@ func (s *server) handlerIndex(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 	defer w.Header().Set("Content-Type", "text/html")
 
-	io.WriteString(w, indexPage)
+	_, _ = io.WriteString(w, indexPage)
 }
 
 func (s *server) handlerLogin(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +78,8 @@ func (s *server) handlerShortenLink(w http.ResponseWriter, r *http.Request) {
 	)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	io.WriteString(w, shortCode)
+
+	_, _ = io.WriteString(w, shortCode)
 }
 
 func (s *server) handlerRedirect(w http.ResponseWriter, r *http.Request) {
